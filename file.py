@@ -13,12 +13,10 @@ st.markdown(
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;450;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap');
 
-    /* Global Font & Background */
     html, body, [class*="css"] {
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
     
-    /* Judul Utama */
     .main-title {
         font-family: 'Playfair Display', serif;
         color: #d81b60;
@@ -33,7 +31,6 @@ st.markdown(
         margin-bottom: 30px;
     }
 
-    /* Styling Metric Card Kustom */
     .metric-card {
         background-color: #fff0f5;
         border: 1px solid #ffb6c1;
@@ -56,13 +53,11 @@ st.markdown(
         margin-top: 5px;
     }
 
-    /* Header Section */
     h2, h3 {
         color: #c2185b !important;
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
     
-    /* Sidebar Styling */
     [data-testid="stSidebar"] {
         background-color: #fff9fb;
         border-right: 1px solid #ffe4e1;
@@ -72,7 +67,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 3. Load Data Secara Aman (Mendukung path relatif file.py)
+
+# 3. Load Data Secara Aman
 @st.cache_data
 def load_data():
   dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -99,7 +95,6 @@ st.sidebar.markdown("---")
 daftar_kota = sorted(df["Kota"].dropna().unique())
 daftar_tahun = sorted(df["Tahun"].dropna().unique())
 
-# Pilihan Menu Utama di Sidebar
 menu = st.sidebar.radio(
     "Navigasi Dashboard",
     [
@@ -123,14 +118,12 @@ selected_tahun = st.sidebar.slider(
     value=(int(min(daftar_tahun)), int(max(daftar_tahun))),
 )
 
-# Filter Data Berdasarkan Sidebar
 filtered_df = df[
     (df["Kota"].isin(selected_kota))
     & (df["Tahun"] >= selected_tahun[0])
     & (df["Tahun"] <= selected_tahun[1])
 ]
 
-# Identifikasi Kolom Numerik untuk Analisis
 kolom_numerik = [
     col
     for col in filtered_df.select_dtypes(include=["float64", "int64"]).columns
@@ -151,7 +144,6 @@ if menu == "📈 Overview & Tren":
       unsafe_allow_html=True,
   )
 
-  # Ringkasan Metrics Cards
   col1, col2, col3, col4 = st.columns(4)
   with col1:
     st.markdown(
@@ -199,16 +191,16 @@ if menu == "📈 Overview & Tren":
   if not filtered_df.empty and kolom_numerik:
     st.subheader("📊 Grafik Tren Waktu per Indikator")
     y_axis = st.selectbox(
-        "Pilih Indikator Metrik untuk Dianiaya:", options=kolom_numerik
+        "Pilih Indikator Metrik:", options=kolom_numerik, key="overview_metric"
     )
 
-    # Pivot data untuk grafik garis Streamlit
-    chart_data = filtered_df.pivot(
-        index="Tahun", columns="Kota", values=y_axis
+    # Perbaikan agar pivot data bersih dari duplikasi index dan aman dari StreamlitAPIException
+    chart_data = filtered_df.pivot_table(
+        index="Tahun", columns="Kota", values=y_axis, aggfunc="mean"
     )
-    st.line_chart(
-        chart_data, color=["#ff69b4", "#ff1493", "#db7093", "#ffb6c1", "#c71585"]
-    )
+
+    # Menggunakan st.line_chart tanpa parameter color eksplisit agar aman dari error versi Streamlit
+    st.line_chart(chart_data, use_container_width=True)
   else:
     st.warning("Silakan pilih minimal satu kota dan pastikan data tersedia.")
 
@@ -239,7 +231,6 @@ elif menu == "⚖️ Perbandingan Antar Kota":
           key="comp_year",
       )
 
-    # Filter data khusus tahun tersebut
     df_komparasi = filtered_df[filtered_df["Tahun"] == pilih_tahun_satu]
 
     if not df_komparasi.empty:
@@ -250,7 +241,7 @@ elif menu == "⚖️ Perbandingan Antar Kota":
           .rename(columns={pilih_Indikator: "Nilai"})
       )
       st.bar_chart(
-          bar_data.set_index("Kota"), color="#ff69b4", use_container_width=True
+          bar_data.set_index("Kota"), use_container_width=True
       )
 
       st.markdown("### 📋 Ringkasan Nilai Komparasi")
@@ -261,9 +252,7 @@ elif menu == "⚖️ Perbandingan Antar Kota":
     else:
       st.info("Tidak ada data pada tahun dan kota yang dipilih.")
   else:
-    st.warning(
-        "Harap pilih minimal satu kota di control panel sidebar sebelah kiri."
-    )
+    st.warning("Harap pilih minimal satu kota di control panel sidebar.")
 
 # ==========================================
 # HALAMAN 3: EKSPLORASI DATA ANALISIS (EDA)
@@ -287,7 +276,6 @@ elif menu == "🔍 Eksplorasi Data Analisis (EDA)":
     with tab1:
       st.subheader("Ringkasan Statistik Deskriptif")
       desc_stats = filtered_df[kolom_numerik].describe()
-      # Styling tabel agar bernuansa pink lembut
       st.dataframe(
           desc_stats.style.background_gradient(cmap="PuRd"),
           use_container_width=True,
@@ -299,10 +287,6 @@ elif menu == "🔍 Eksplorasi Data Analisis (EDA)":
       st.dataframe(
           corr_matrix.style.background_gradient(cmap="RdPu", vmin=-1, vmax=1),
           use_container_width=True,
-      )
-      st.caption(
-          "Catatan: Nilai mendekati 1 atau -1 menunjukkan hubungan linier"
-          " yang kuat antar indikator keuangan/daerah."
       )
   else:
     st.warning("Data atau kolom numerik tidak mencukupi untuk analisis EDA.")
@@ -323,7 +307,6 @@ elif menu == "📋 Tabel Data Mentah":
 
   st.dataframe(filtered_df, use_container_width=True)
 
-  # Tombol Download CSV
   csv_export = filtered_df.to_csv(index=False).encode("utf-8")
   st.download_button(
       label="📥 Download Data Terfilter as CSV",
