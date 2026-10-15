@@ -5,7 +5,7 @@ import streamlit as st
 
 # 1. Konfigurasi Halaman (Judul & Layout Lebar)
 st.set_page_config(
-    page_title="Dashboard Aesthetic Pink", page_icon="💖", layout="wide"
+    page_title="Dashboard Aesthetic Pink", page_icon="𓍢ִ໋🌷͙֒✧", layout="wide"
 )
 
 # 2. CSS Custom untuk Judul Aesthetic Warna Pink & Tampilan Lainnya
@@ -36,7 +36,7 @@ st.markdown(
 )
 
 # Menampilkan Judul Aesthetic
-st.markdown('<p class="aesthetic-title">✨ Space Dashboard ✨</p>', unsafe_allow_html=True)
+st.markdown('<p class="aesthetic-title">✨ PDS Dashboard ✨</p>', unsafe_allow_html=True)
 st.markdown(
     '<p class="subtitle">Eksplorasi data keuangan dan daerah dengan sentuhan manis 🌸</p>',
     unsafe_allow_html=True,
